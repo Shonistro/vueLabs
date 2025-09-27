@@ -33,7 +33,6 @@ header {
 }
 
 main {
-  /* make main take available viewport and center its content */
   display: flex;
   align-items: center;
   justify-content: center;
