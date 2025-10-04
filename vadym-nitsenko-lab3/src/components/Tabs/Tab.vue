@@ -24,7 +24,6 @@ const classes = computed(() => {
   if (variant === 'boxed') {
     return [base, 'px-4 py-2 border rounded-md -mr-px', isActive.value ? 'bg-white border-blue-600 text-blue-600' : 'bg-white border-gray-200 text-gray-700']
   }
-  // underline
   return [base, 'px-4 py-2', isActive.value ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-700']
 })
 </script>
