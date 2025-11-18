@@ -16,7 +16,27 @@
       </div>
 
       <div v-for="(fileObj, index) in previews" :key="`file-${index}-${fileObj.file.name}`" class="preview-item file-item">
-        <img :src="fileObj.url" alt="preview" class="preview-img"/>
+        <template v-if="fileObj.isImage">
+          <img :src="fileObj.url" alt="preview" class="preview-img"/>
+        </template>
+
+        <template v-else-if="fileObj.isPdf">
+          <!-- show pdf icon rather than embed preview -->
+          <img :src="fileIconFor(fileObj.ext)" alt="pdf" class="file-icon" />
+        </template>
+
+        <template v-else>
+          <!-- fallback (non-image non-pdf): show icon if available, otherwise show extension -->
+          <template v-if="fileIconFor(fileObj.ext)">
+            <img :src="fileIconFor(fileObj.ext)" alt="file" class="file-icon" />
+          </template>
+          <template v-else>
+            <div class="preview-fallback">
+              <div class="file-ext">{{ fileObj.ext || 'file' }}</div>
+            </div>
+          </template>
+        </template>
+
         <div class="file-name">{{ fileObj.file.name }}</div>
         <button class="btn-delete" @click="removeFile(index)">✕</button>
       </div>
@@ -45,9 +65,25 @@ const previews = computed(() => {
       url = URL.createObjectURL(file)
       objectUrls.set(file, url)
     }
-    return { file, url }
+
+    const isImage = file.type?.startsWith('image/')
+    const isPdf = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')
+    const ext = file.name && file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : ''
+
+    return { file, url, isImage, isPdf, ext }
   })
 })
+
+const iconMap: Record<string, string> = {
+  pdf: '/icons/pdf.svg',
+  docx: '/icons/docx.svg',
+  xlsx: '/icons/xlsx.svg'
+}
+
+function fileIconFor(ext: string | undefined) {
+  if (!ext) return ''
+  return iconMap[ext] ?? ''
+}
 
 watch(() => props.modelValue, (nv) => { if (!nv) return; uploadedFiles.value = [...nv] })
 watch(() => props.documents, (nv) => { if (!nv) return; localDocuments.value = [...nv] })
@@ -127,8 +163,36 @@ onUnmounted(() => { objectUrls.forEach(u => URL.revokeObjectURL(u)); objectUrls.
         object-fit: cover;
         border-radius: 4px;
       }
+      .pdf-embed {
+        width: 100%;
+        height: 80px;
+        border: none;
+        border-radius: 4px;
+      }
+
+      .preview-fallback {
+        width: 100%;
+        height: 80px;
+        border-radius: 4px;
+        background: linear-gradient(180deg, #fafafa, #f2f2f2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-weight: 600;
+      }
+
+      .file-ext {
+        font-size: 18px;
+        text-transform: uppercase;
+      }
 
       .doc-icon {
+        width: 48px;
+        height: 48px;
+      }
+
+      .file-icon {
         width: 48px;
         height: 48px;
       }
